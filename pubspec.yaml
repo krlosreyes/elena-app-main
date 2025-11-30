@@ -1,0 +1,54 @@
+name: elena_app
+description: MVP para seguimiento de recomposición corporal
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # LOCALIZACIONES (NECESARIO PARA DatePicker y Material Widgets)
+  flutter_localizations:
+    sdk: flutter
+
+  # STATE MANAGEMENT
+  flutter_riverpod: ^2.6.1
+
+  # FIREBASE
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.3
+  cloud_firestore: ^5.5.1
+
+  # ROUTING
+  go_router: ^14.6.2
+
+  # CHARTS
+  fl_chart: ^0.70.1
+
+  # UTILITIES
+  intl: ^0.20.2
+  shared_preferences: ^2.3.3
+
+  # FREEZED / JSON SERIALIZABLE
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+  # FREEZED / BUILD
+  freezed: ^2.4.7
+  build_runner: ^2.4.11
+  json_serializable: ^6.8.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo_elena.png
