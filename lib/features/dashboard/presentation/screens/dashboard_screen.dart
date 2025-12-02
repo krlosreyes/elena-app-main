@@ -7,7 +7,6 @@ import '../widgets/streak_card.dart';
 import '../widgets/fasting_timer_preview.dart';
 import '../widgets/xp_progress_bar.dart';
 import '../widgets/quick_action_button.dart';
-import 'package:elena_app/features/auth/providers/auth_provider.dart';
 
 /// Pantalla principal del dashboard
 ///

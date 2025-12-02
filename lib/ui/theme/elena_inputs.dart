@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'elena_colors.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/cupertino.dart';
 
 /// ------------------------------------------------------------
 /// INPUTS DE TEXTO
@@ -10,11 +10,14 @@ class ElenaInput extends StatelessWidget {
   final String? hint;
   final TextEditingController controller;
 
+  final Widget? suffixIcon;
+
   const ElenaInput({
     super.key,
     required this.label,
     required this.controller,
     this.hint,
+    this.suffixIcon,
   });
 
   @override
@@ -31,6 +34,7 @@ class ElenaInput extends StatelessWidget {
             hintText: hint,
             filled: true,
             fillColor: Colors.white,
+            suffixIcon: suffixIcon,
             border: OutlineInputBorder(
               borderSide: const BorderSide(color: ElenaColors.border),
               borderRadius: BorderRadius.circular(12),
@@ -100,7 +104,7 @@ class ElenaInputNumber extends StatelessWidget {
 class ElenaDateInput extends StatelessWidget {
   final String label;
   final DateTime? value;
-  final void Function(DateTime?) onChanged;
+  final Function(DateTime) onChanged;
 
   const ElenaDateInput({
     super.key,
@@ -109,76 +113,87 @@ class ElenaDateInput extends StatelessWidget {
     required this.onChanged,
   });
 
-  String _format(DateTime? d) {
-    if (d == null) return "Seleccionar fecha";
-    return DateFormat("d 'de' MMMM 'de' y", "es_ES").format(d);
+  void _showCupertinoDatePicker(BuildContext context) {
+    showCupertinoModalPopup(
+      context: context,
+      barrierColor: Colors.black26,
+      builder: (_) {
+        return SafeArea(
+          child: Center(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 1.05, end: 1.0),
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOutCubic,
+              builder: (context, scale, child) {
+                return Transform.scale(
+                  scale: scale,
+                  child: child,
+                );
+              },
+              child: Container(
+                width: 420,
+                height: 330,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Listener(
+                        onPointerSignal: (event) {
+                          // Permite scroll con rueda del mouse en Web
+                        },
+                        child: CupertinoDatePicker(
+                          mode: CupertinoDatePickerMode.date,
+                          initialDateTime: value ?? DateTime(2000, 1, 1),
+                          maximumDate: DateTime.now(),
+                          onDateTimeChanged: onChanged,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: CupertinoButton(
+                        color: ElenaColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: const Text(
+                          "Listo",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 6),
-        InkWell(
-          onTap: () async {
-            final now = DateTime.now();
-
-            final picked = await showDatePicker(
-              context: context,
-              locale: const Locale('es', 'ES'),
-              initialDate: value ?? DateTime(now.year - 20),
-              firstDate: DateTime(1950),
-              lastDate: DateTime(now.year + 1),
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: ColorScheme.light(
-                      primary: ElenaColors.primary,
-                      onPrimary: Colors.white,
-                      surface: Colors.white,
-                      onSurface: ElenaColors.textPrimary,
-                    ),
-                    dialogTheme: DialogThemeData(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
-            );
-
-            onChanged(picked);
-          },
-          child: Container(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: ElenaColors.border.withOpacity(0.5)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _format(value),
-                  style: TextStyle(
-                    color:
-                        value == null ? Colors.grey : ElenaColors.textPrimary,
-                    fontSize: 16,
-                  ),
-                ),
-                const Icon(Icons.calendar_today, size: 20),
-              ],
-            ),
+    return GestureDetector(
+      onTap: () => _showCupertinoDatePicker(context),
+      child: AbsorbPointer(
+        child: ElenaInput(
+          label: label,
+          hint: "Seleccionar fecha",
+          controller: TextEditingController(
+            text: value == null
+                ? ""
+                : "${value!.day}/${value!.month}/${value!.year}",
           ),
+          suffixIcon: const Icon(Icons.calendar_today),
         ),
-      ],
+      ),
     );
   }
 }
@@ -348,6 +363,150 @@ class ElenaGridSelectable extends StatelessWidget {
   }
 }
 
+/// ------------------------------------------------
+/// Selectable_card Whit _emojis
+/// ------------------------------------------------
+class ElenaSelectableCardEmoji extends StatelessWidget {
+  final String title;
+  final String emoji;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const ElenaSelectableCardEmoji({
+    super.key,
+    required this.title,
+    required this.emoji,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          color: selected ? ElenaColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected
+                ? ElenaColors.primary.withOpacity(0.9)
+                : ElenaColors.border.withOpacity(0.3),
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: ElenaColors.primary.withOpacity(0.18),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
+        ),
+        child: Row(
+          children: [
+            Text(
+              emoji,
+              style: TextStyle(
+                fontSize: 26,
+                color: selected ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: selected ? Colors.white : Colors.black87,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ------------------------------------------------
+/// Selectable_card Whit _emojis_description
+/// ------------------------------------------------
+class ElenaSelectableCardEmojiDescription extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String description;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const ElenaSelectableCardEmojiDescription({
+    super.key,
+    required this.emoji,
+    required this.title,
+    required this.description,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color:
+              selected ? ElenaColors.primary.withOpacity(0.15) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? ElenaColors.primary : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              emoji,
+              style: const TextStyle(fontSize: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: selected ? ElenaColors.primary : Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black54,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// ------------------------------------------------------------
 /// BOTÓN PRIMARIO (faltaba en tu UI System)
 /// ------------------------------------------------------------
@@ -381,7 +540,7 @@ class ElenaPrimaryButton extends StatelessWidget {
   }
 }
 
-// ------------------------------------------------------------
+/// ------------------------------------------------------------
 // LISTA DE PAÍSES CON BANDERA
 // ------------------------------------------------------------
 class Country {

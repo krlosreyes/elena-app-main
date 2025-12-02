@@ -43,8 +43,29 @@ class OnboardingController extends StateNotifier<OnboardingState> {
   // -------------------------
   // TIPOS DE EJERCICIO
   // -------------------------
-  void setExerciseTypes(List<String> types) {
-    state = state.copyWith(exerciseTypes: types);
+  void setExerciseList(List<String> exercises) {
+    state = state.copyWith(
+      exerciseTypes: exercises, // Ajusta el nombre según tu modelo
+    );
+  }
+
+  // -------------------------
+  // TIPOS DE ALIMENTACION
+  // -------------------------
+  void setDietType(String diet) {
+    state = state.copyWith(
+      dietType: diet,
+    );
+  }
+
+  // -------------------------
+  // TIPOS DE CONDICIONES MEDICAS
+  // -------------------------
+
+  void setMedicalConditions(List<String> conditions) {
+    state = state.copyWith(
+      medicalConditions: conditions,
+    );
   }
 
   // -------------------------

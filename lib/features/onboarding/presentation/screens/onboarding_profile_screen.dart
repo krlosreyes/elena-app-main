@@ -24,16 +24,74 @@ class _OnboardingProfileScreenState
   int? sittingHours;
   String? dietType;
   List<String> medical = [];
-  List<String> exerciseTypes = [];
 
-  final List<String> exerciseOptions = [
-    "Pesas",
-    "CrossFit",
-    "Pilates",
-    "Cardio",
-    "Correr",
-    "Caminar",
+  /// ---------------------------------------------------------
+  /// AQUI VA LA LISTA DE TIPOS DE EJERCICIO
+  /// ---------------------------------------------------------
+  final List<Map<String, String>> exerciseListData = [
+    {"label": "Correr", "emoji": "🏃"},
+    {"label": "Caminata", "emoji": "🚶"},
+    {"label": "Fuerza", "emoji": "🏋️"},
+    {"label": "Ciclismo", "emoji": "🚴"},
+    {"label": "Natación", "emoji": "🏊"},
+    {"label": "HIIT", "emoji": "🔥"},
   ];
+
+  List<String> exerciseList = [];
+
+  /// ---------------------------------------------------------
+  /// AQUI VA LA LISTA DE TIPOS DE ALIMENTACION
+  /// ---------------------------------------------------------
+
+  final List<Map<String, String>> feedingTypesData = [
+    {
+      "label": "Flexible / IIFYM",
+      "emoji": "⚖️",
+      "description":
+          "Comes lo que quieras mientras cumples tus macros. Flexible, adaptable."
+    },
+    {
+      "label": "Mediterránea",
+      "emoji": "🍅",
+      "description":
+          "Alta en vegetales, grasas saludables y alimentos frescos. Muy equilibrada."
+    },
+    {
+      "label": "Vegetariana",
+      "emoji": "🥦",
+      "description":
+          "Enfocada en plantas. Permite lácteos/huevos, excluye carnes."
+    },
+    {
+      "label": "Cetogénica",
+      "emoji": "🥑",
+      "description": "Alta en grasas saludables, muy baja en carbohidratos."
+    },
+    {
+      "label": "Omnívora",
+      "emoji": "🍗",
+      "description":
+          "Incluye plantas y animales. La alimentación más común y variada."
+    },
+  ];
+
+  String? selectedFeedingType;
+
+  /// ---------------------------------------------------------
+  /// AQUI VA LA LISTA DE TIPOS DE CONDICIONES MEDICAS
+  /// ---------------------------------------------------------
+
+  final List<Map<String, String>> medicalConditionsData = [
+    {"label": "Ninguna", "emoji": "✅"},
+    {"label": "Prediabetes", "emoji": "🩸"},
+    {"label": "Diabetes", "emoji": "💉"},
+    {"label": "Hipotiroidismo", "emoji": "🦋"},
+    {"label": "Anemia", "emoji": "⬇️"},
+    {"label": "Hipertensión", "emoji": "❤️"},
+    {"label": "SOP", "emoji": "♀️"},
+  ];
+
+  List<String> medicalConditions = [];
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +107,17 @@ class _OnboardingProfileScreenState
             Center(
               child: Column(
                 children: [
+                  // LOGO
+                  Image.asset(
+                    'assets/logo_elena.png',
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.contain,
+                  ),
+
+                  //const SizedBox(height: 4),
+
+                  // TÍTULO DE LA APP
                   const Text(
                     "ELENA",
                     style: TextStyle(
@@ -57,9 +126,12 @@ class _OnboardingProfileScreenState
                       color: ElenaColors.primary,
                     ),
                   ),
+
                   const SizedBox(height: 4),
+
+                  // SUBTÍTULO
                   Text(
-                    "Tu compañera en transformación corporal",
+                    "Tu transformación comienza ahora...",
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
@@ -166,7 +238,7 @@ class _OnboardingProfileScreenState
 
             const SizedBox(height: 0.1),
 
-            // =====================================================
+// =====================================================
 // CARD 3 – EJERCICIO
 // =====================================================
             ElenaContainerCard(
@@ -178,21 +250,20 @@ class _OnboardingProfileScreenState
                   Row(
                     children: [
                       Expanded(
-                        child: ElenaSelectableCard(
+                        child: ElenaSelectableCardEmoji(
                           selected: doesExercise == true,
                           title: "Sí",
+                          emoji: "💪",
                           onTap: () => setState(() => doesExercise = true),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: ElenaSelectableCard(
+                        child: ElenaSelectableCardEmoji(
                           selected: doesExercise == false,
                           title: "No",
-                          onTap: () => setState(() {
-                            doesExercise = false;
-                            exerciseTypes.clear();
-                          }),
+                          emoji: "🚫",
+                          onTap: () => setState(() => doesExercise = false),
                         ),
                       ),
                     ],
@@ -202,27 +273,35 @@ class _OnboardingProfileScreenState
                   if (doesExercise == true) ...[
                     const SizedBox(height: 20),
                     const ElenaSectionTitle("¿Qué tipo de ejercicio realizas?"),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: exerciseOptions.map((type) {
-                        final isSelected = exerciseTypes.contains(type);
-
-                        return ElenaSelectableCard(
-                          title: type,
-                          selected: isSelected,
+                    GridView.builder(
+                      itemCount: exerciseListData.length, // tu lista de tipos
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // ← dos columnas
+                        crossAxisSpacing: 12, // separación horizontal
+                        mainAxisSpacing: 12, // separación vertical
+                        childAspectRatio:
+                            3.0, // ← controla proporción (más ancho que alto)
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = exerciseListData[index];
+                        return ElenaSelectableCardEmoji(
+                          title: item['label']!,
+                          emoji: item['emoji']!,
+                          selected: exerciseList.contains(item['label']),
                           onTap: () {
                             setState(() {
-                              if (isSelected) {
-                                exerciseTypes.remove(type);
+                              if (exerciseList.contains(item['label'])) {
+                                exerciseList.remove(item['label']);
                               } else {
-                                exerciseTypes.add(type);
+                                exerciseList.add(item['label']!);
                               }
                             });
                           },
                         );
-                      }).toList(),
+                      },
                     ),
                   ],
                 ],
@@ -236,17 +315,36 @@ class _OnboardingProfileScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const ElenaSectionTitle("Tipo de alimentación"),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      _diet("Flexible / IIFYM"),
-                      _diet("Mediterránea"),
-                      _diet("Vegetariana"),
-                      _diet("Cetogénica"),
-                      _diet("Omnívora"),
-                    ],
+                  const ElenaSectionTitle("¿Cuál es tu tipo de alimentación?"),
+                  GridView.builder(
+                    itemCount: feedingTypesData.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 2.5,
+                    ),
+                    itemBuilder: (context, index) {
+                      final item = feedingTypesData[index];
+
+                      return ElenaSelectableCardEmojiDescription(
+                        title: item["label"]!,
+                        emoji: item["emoji"]!,
+                        description: item["description"]!,
+                        selected: selectedFeedingType == item["label"],
+                        onTap: () {
+                          setState(() {
+                            selectedFeedingType =
+                                selectedFeedingType == item["label"]
+                                    ? null
+                                    : item["label"]!;
+                          });
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
@@ -261,88 +359,73 @@ class _OnboardingProfileScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const ElenaSectionTitle("Condiciones médicas"),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      _med("Ninguna"),
-                      _med("Prediabetes"),
-                      _med("Diabetes"),
-                      _med("Hipotiroidismo"),
-                      _med("Anemia"),
-                      _med("Hipertensión"),
-                      _med("SOP"),
-                    ],
+                  ElenaSectionTitle("Condiciones médicas"),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 3,
+                    children: medicalConditionsData.map((item) {
+                      final label = item["label"]!;
+                      final emoji = item["emoji"]!;
+
+                      return ElenaSelectableCardEmoji(
+                        title: label,
+                        emoji: emoji,
+                        selected: medicalConditions.contains(label),
+                        onTap: () {
+                          setState(() {
+                            if (medicalConditions.contains(label)) {
+                              medicalConditions.remove(label);
+                            } else {
+                              medicalConditions.add(label);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  ElenaPrimaryButton(
+                    label: "Continuar",
+                    onPressed: () {
+                      final controller =
+                          ref.read(onboardingControllerProvider.notifier);
+
+                      controller.setProfile(
+                        name: nameCtrl.text.trim(),
+                        birthdate: birthdate,
+                        sexIdentity: sexIdentity,
+                        occupation: occupationCtrl.text.trim(),
+                        country: country,
+                        doesExercise: doesExercise,
+                        sittingHoursPerDay: sittingHours,
+                      );
+
+                      // Alimentación correcta
+                      if (selectedFeedingType != null) {
+                        controller.setDietType(selectedFeedingType!);
+                      }
+
+                      // Condiciones médicas correctas
+                      controller.setMedicalConditions(medicalConditions);
+
+                      // Tipos de ejercicio correctos
+                      controller.setExerciseList(exerciseList);
+
+                      context.go("/onboarding/biometrics");
+                    },
                   ),
                 ],
               ),
             ),
 
             const SizedBox(height: 0.1),
-
-            // =====================================================
-            // CARD 6 – BOTÓN FINAL
-            // =====================================================
-            ElenaContainerCard(
-              child: ElenaPrimaryButton(
-                label: "Continuar",
-                onPressed: () {
-                  ref.read(onboardingControllerProvider.notifier).setProfile(
-                        name: nameCtrl.text,
-                        birthdate: birthdate,
-                        sexIdentity: sexIdentity,
-                        occupation: occupationCtrl.text,
-                        country: country,
-                        doesExercise: doesExercise,
-                        sittingHoursPerDay: sittingHours,
-                        dietType: dietType,
-                        medicalConditions: medical,
-                      );
-                  ref
-                      .read(onboardingControllerProvider.notifier)
-                      .setExerciseTypes(exerciseTypes);
-
-                  context.go("/onboarding/biometrics");
-                },
-              ),
-            ),
           ],
         ),
       ),
-    );
-  }
-
-  // ------------------------------
-  // WIDGETS AUXILIARES
-  // ------------------------------
-
-  Widget _diet(String label) {
-    return ElenaSelectableCard(
-      title: label,
-      selected: dietType == label,
-      onTap: () => setState(() => dietType = label),
-    );
-  }
-
-  Widget _med(String label) {
-    return ElenaSelectableCard(
-      title: label,
-      selected: medical.contains(label),
-      onTap: () {
-        setState(() {
-          if (label == "Ninguna") {
-            medical = ["Ninguna"];
-          } else {
-            medical.remove("Ninguna");
-            if (medical.contains(label)) {
-              medical.remove(label);
-            } else {
-              medical.add(label);
-            }
-          }
-        });
-      },
     );
   }
 }
