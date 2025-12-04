@@ -19,27 +19,22 @@ class ElenaContainerCard extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Container(
-          margin:
-              const EdgeInsets.only(bottom: 32), // 👈 ESPACIADO ENTRE SECCIONES
+          margin: const EdgeInsets.only(bottom: 32),
           padding: padding,
-
           decoration: BoxDecoration(
-            color: ElenaColors.cardBackground, // 👈 FONDO MÁS LIMPIO
-            borderRadius:
-                BorderRadius.circular(20), // 👈 BORDES REDONDEADOS GRANDES
+            color: ElenaColors.cardBackground,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.black12.withOpacity(
-                  0.06), // 👈 BORDE SUPER SUAVE (como en la referencia)
+              color: Colors.black12.withOpacity(0.06),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black12.withOpacity(0.03), // 👈 SOMBRA MUY SUAVE
+                color: Colors.black12.withOpacity(0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
             ],
           ),
-
           child: child,
         ),
       ),

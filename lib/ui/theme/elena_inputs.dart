@@ -816,3 +816,148 @@ class ElenaDropdownCountry extends StatelessWidget {
     );
   }
 }
+
+// ------------------------------------------------------------
+/// TIME PICKER – ESTILO CUPERTINO (NO DESBORDA, FUNCIONA EN WEB)
+/// ------------------------------------------------------------
+class ElenaTimeInputCupertino extends StatelessWidget {
+  final String label;
+  final TimeOfDay? value;
+  final ValueChanged<TimeOfDay> onChanged;
+
+  const ElenaTimeInputCupertino({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  String _format(TimeOfDay? t) {
+    if (t == null) return "";
+    final hour = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+    final minute = t.minute.toString().padLeft(2, '0');
+    final period = t.period == DayPeriod.am ? "a. m." : "p. m.";
+    return "$hour:$minute $period";
+  }
+
+  void _openPicker(BuildContext context) {
+    final initial = DateTime(
+      2023,
+      1,
+      1,
+      value?.hour ?? 22,
+      value?.minute ?? 0,
+    );
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (_) => Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              height: 340,
+              decoration: const BoxDecoration(
+                color: Color(0xFF2C2C2C),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Header superior
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.access_time,
+                            color: Colors.white70, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            "Cerrar",
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Divider(height: 1, color: Colors.white12),
+
+                  // Picker
+                  Expanded(
+                    child: CupertinoTheme(
+                      data: const CupertinoThemeData(
+                        brightness: Brightness.dark,
+                      ),
+                      child: CupertinoDatePicker(
+                        mode: CupertinoDatePickerMode.time,
+                        use24hFormat: false,
+                        initialDateTime: initial,
+                        onDateTimeChanged: (dt) {
+                          onChanged(
+                            TimeOfDay(hour: dt.hour, minute: dt.minute),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+
+                  // Botón inferior
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      color: ElenaColors.primary,
+                      alignment: Alignment.center,
+                      child: const Text(
+                        "Listo",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = _format(value);
+
+    return GestureDetector(
+      onTap: () => _openPicker(context),
+      child: AbsorbPointer(
+        child: ElenaInput(
+          label: label,
+          hint: "",
+          controller: TextEditingController(text: text),
+        ),
+      ),
+    );
+  }
+}

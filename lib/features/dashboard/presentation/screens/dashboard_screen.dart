@@ -1,280 +1,285 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../ui/elena_ui_system.dart';
-import '../../../auth/providers/auth_provider.dart';
-import '../widgets/streak_card.dart';
-import '../widgets/fasting_timer_preview.dart';
-import '../widgets/xp_progress_bar.dart';
-import '../widgets/quick_action_button.dart';
 
-/// Pantalla principal del dashboard
-///
-/// Muestra resumen del día, timer de ayuno, rachas, acciones rápidas
+import 'package:elena_app/ui/layouts/elena_centered_layout.dart';
+import 'package:elena_app/ui/theme/elena_colors.dart';
+import 'package:elena_app/features/profile/providers/user_provider.dart';
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userProfile = ref.watch(currentUserProfileProvider);
+    final userData = ref.watch(userDataProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: userProfile
-                .whenData(
-                  (profile) => Text('Hola, ${profile?.name ?? 'Usuario'}'),
-                )
-                .value ??
-            const Text('Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () => context.go('/history'),
-            tooltip: 'Historial',
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              final shouldLogout = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Cerrar Sesión'),
-                  content: const Text('¿Estás seguro que deseas salir?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancelar'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Salir'),
-                    ),
-                  ],
-                ),
-              );
-
-              if (shouldLogout == true) {
-                final authController =
-                    ref.read(authControllerProvider.notifier);
-                await authController.signOut();
-                if (context.mounted) {
-                  context.go('/login');
-                }
-              }
-            },
-            tooltip: 'Cerrar sesión',
-          ),
-        ],
-      ),
-      body: userProfile.when(
-        data: (profile) {
-          if (profile == null) {
-            return const Center(child: Text('No se pudo cargar el perfil'));
+    return ElenaCenteredLayout(
+      maxWidth: 480,
+      child: userData.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text("Error: $e")),
+        data: (data) {
+          if (data == null) {
+            // CORREGIDO: evitar pantalla vacía en el shell
+            return const Center(child: CircularProgressIndicator());
           }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(currentUserProfileProvider);
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Barra de XP y nivel
-                  XPProgressBar(
-                    currentXP: profile.xp,
-                    level: profile.level,
+          final name = (data["name"] as String?) ?? "Usuario";
+          final plan = data["plan"] as Map<String, dynamic>?;
+
+          final fastingRec =
+              (plan?["fastingRecommendation"] as String?) ?? "12:12";
+          final exerciseRec =
+              (plan?["exerciseRecommendation"] as String?) ?? "2 días";
+          final calorieGoal = (plan?["calorieGoal"] as num?)?.toDouble() ?? 0.0;
+
+          final streak = (data["streak"] as int?) ?? 0;
+          final exerciseTypes =
+              (data["exerciseTypes"] as List?)?.cast<String>() ?? [];
+          final days = exerciseTypes.length;
+
+          final todayCalories = (data["todayCalories"] as int?) ?? 0;
+          final xp = (data["xp"] as int?) ?? 0;
+          final level = (data["level"] as int?) ?? 1;
+          final nextLevelXp = (data["nextLevelXp"] as int?) ?? 200;
+
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                _Header(name: name),
+                const SizedBox(height: 22),
+                _DashboardCard(
+                  child: _FastingCard(
+                    fastingRec: fastingRec,
+                    streak: streak,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Racha de ayuno (destacado)
-                  StreakCard(
-                    currentStreak: profile.currentFastingStreak,
-                    longestStreak: profile.longestFastingStreak,
-                    nextMilestone:
-                        _getNextMilestone(profile.currentFastingStreak),
-                    xpForMilestone:
-                        _getMilestoneXP(profile.currentFastingStreak),
+                ),
+                _DashboardCard(
+                  child: _ExerciseCard(
+                    exerciseRec: exerciseRec,
+                    days: days,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Timer de ayuno (preview)
-                  FastingTimerPreview(
-                    isFasting: false, // TODO: Obtener de provider de ayuno
-                    elapsed: const Duration(hours: 0),
-                    target: Duration(
-                      hours: profile.fastingProtocol == 'omad'
-                          ? 23
-                          : int.parse(profile.fastingProtocol.split(':')[0]),
-                    ),
-                    onTap: () => context.go('/fasting'),
+                ),
+                _DashboardCard(
+                  child: _FoodCard(
+                    calorieGoal: calorieGoal,
+                    consumed: todayCalories,
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Acciones rápidas
-                  Text(
-                    'Acciones Rápidas',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                ),
+                _DashboardCard(
+                  child: _GamificationCard(
+                    xp: xp,
+                    level: level,
+                    nextLevelXp: nextLevelXp,
                   ),
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: QuickActionButton(
-                          icon: Icons.restaurant,
-                          label: 'Registrar Comida',
-                          color: ElenaColors.warning,
-                          onTap: () => context.go('/register-meal'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: QuickActionButton(
-                          icon: Icons.fitness_center,
-                          label: 'Ejercicio',
-                          color: ElenaColors.success,
-                          onTap: () => context.go('/register-workout'),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  QuickActionButton(
-                    icon: Icons.scale,
-                    label: 'Check-in Semanal',
-                    color: ElenaColors.primary,
-                    onTap: () => context.go('/weekly-checkin'),
-                    isWide: true,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Resumen del día
-                  _DailySummaryCard(profile: profile),
-                ],
-              ),
+                ),
+                const SizedBox(height: 50),
+              ],
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text('Error: $error'),
-        ),
       ),
     );
   }
-
-  int _getNextMilestone(int current) {
-    const milestones = [3, 7, 14, 21, 30, 60, 90, 100];
-    return milestones.firstWhere(
-      (m) => m > current,
-      orElse: () => current + 30,
-    );
-  }
-
-  int _getMilestoneXP(int current) {
-    final next = _getNextMilestone(current);
-    if (next <= 7) return 50;
-    if (next <= 30) return 100;
-    return 200;
-  }
 }
 
-/// Widget de resumen diario
-class _DailySummaryCard extends StatelessWidget {
-  // ignore: prefer_typing_uninitialized_variables
-  final profile;
-
-  const _DailySummaryCard({required this.profile});
+// HEADER
+class _Header extends StatelessWidget {
+  final String name;
+  const _Header({required this.name});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Resumen de Hoy',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            _SummaryRow(
-              icon: Icons.local_fire_department,
-              label: 'Meta de calorías',
-              value: '${profile.calorieGoal.toStringAsFixed(0)} cal',
-              color: ElenaColors.warning,
-            ),
-            const Divider(),
-            _SummaryRow(
-              icon: Icons.fitness_center,
-              label: 'Meta de proteína',
-              value: '${profile.proteinTarget.toStringAsFixed(0)} g',
-              color: ElenaColors.success,
-            ),
-            const Divider(),
-            _SummaryRow(
-              icon: Icons.emoji_events,
-              label: 'XP ganado hoy',
-              value: '0 XP', // TODO: Calcular desde registros diarios
-              color: ElenaColors.xp,
-            ),
-          ],
-        ),
+    return Text(
+      "Hola, $name 👋",
+      style: const TextStyle(
+        fontSize: 26,
+        fontWeight: FontWeight.w700,
+        color: Colors.black87,
       ),
     );
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
+// CARD BASE
+class _DashboardCard extends StatelessWidget {
+  final Widget child;
+  const _DashboardCard({required this.child});
 
-  const _SummaryRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 22),
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: ElenaColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          )
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+// AYUNO
+class _FastingCard extends StatelessWidget {
+  final String fastingRec;
+  final int streak;
+  const _FastingCard({required this.fastingRec, required this.streak});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Ayuno",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        Text("Recomendación: $fastingRec"),
+        Text("Racha: $streak días"),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () => context.go('/fasting'), // CORREGIDO
+          style: ElevatedButton.styleFrom(
+            backgroundColor: ElenaColors.primary,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: const Text("Ir a ayuno"),
+        ),
+      ],
+    );
+  }
+}
+
+// EJERCICIO
+class _ExerciseCard extends StatelessWidget {
+  final String exerciseRec;
+  final int days;
+  const _ExerciseCard({required this.exerciseRec, required this.days});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Ejercicio",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        Text("Realizas $days días por semana"),
+        Text("Recomendado: $exerciseRec"),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () => context.go('/register-workout'), // CORREGIDO
+          style: ElevatedButton.styleFrom(
+            backgroundColor: ElenaColors.secondary,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: const Text("Registrar ejercicio"),
+        ),
+      ],
+    );
+  }
+}
+
+// ALIMENTACIÓN
+class _FoodCard extends StatelessWidget {
+  final double calorieGoal;
+  final int consumed;
+  const _FoodCard({required this.calorieGoal, required this.consumed});
+
+  @override
+  Widget build(BuildContext context) {
+    final goalText = calorieGoal > 0
+        ? "${calorieGoal.toStringAsFixed(0)} kcal objetivo"
+        : "Sin objetivo definido";
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Alimentación",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        Text(goalText),
+        Text("$consumed kcal consumidas hoy"),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () => context.go('/register-meal'), // CORREGIDO
+          style: ElevatedButton.styleFrom(
+            backgroundColor: ElenaColors.primary,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(double.infinity, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: const Text("Registrar comida"),
+        ),
+      ],
+    );
+  }
+}
+
+// GAMIFICACIÓN
+class _GamificationCard extends StatelessWidget {
+  final int xp;
+  final int level;
+  final int nextLevelXp;
+
+  const _GamificationCard({
+    required this.xp,
+    required this.level,
+    required this.nextLevelXp,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-        ],
-      ),
+    final progress = nextLevelXp > 0 ? (xp / nextLevelXp).clamp(0.0, 1.0) : 0.0;
+    final remaining = (nextLevelXp - xp).clamp(0, nextLevelXp);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Gamificación",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        Text("Nivel $level"),
+        Text("$xp XP acumulados"),
+        const SizedBox(height: 6),
+        LinearProgressIndicator(
+          value: progress,
+          color: Colors.green,
+          backgroundColor: Colors.black12.withOpacity(0.1),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          "Faltan $remaining XP para el siguiente nivel",
+          style: const TextStyle(color: Colors.black54),
+        ),
+      ],
     );
   }
 }

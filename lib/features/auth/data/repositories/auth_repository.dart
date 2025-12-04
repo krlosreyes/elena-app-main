@@ -27,8 +27,6 @@ class AuthRepository {
   User? get currentUser => _auth.currentUser;
 
   /// Registrar nuevo usuario
-  ///
-  /// Crea cuenta en Firebase Auth
   Future<User?> registerWithEmailPassword({
     required String email,
     required String password,
@@ -60,14 +58,17 @@ class AuthRepository {
     }
   }
 
-  /// Cerrar sesión
+  /// Cerrar sesión (nombre oficial)
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
+  /// Alias para mantener compatibilidad con pantallas viejas
+  Future<void> logout() async {
+    await signOut();
+  }
+
   /// Crear perfil de usuario en Firestore
-  ///
-  /// Se llama después del registro exitoso
   Future<void> createUserProfile(UserProfile profile) async {
     try {
       await _firestore
@@ -79,7 +80,7 @@ class AuthRepository {
     }
   }
 
-  /// Obtener perfil de usuario desde Firestore
+  /// Obtener perfil de usuario
   Future<UserProfile?> getUserProfile(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
@@ -99,9 +100,7 @@ class AuthRepository {
     }
   }
 
-  /// Stream del perfil de usuario
-  ///
-  /// Escucha cambios en tiempo real
+  /// Stream del perfil
   Stream<UserProfile?> watchUserProfile(String uid) {
     return _firestore.collection('users').doc(uid).snapshots().map((doc) {
       if (!doc.exists) return null;
@@ -117,7 +116,7 @@ class AuthRepository {
     });
   }
 
-  /// Actualizar perfil de usuario
+  /// Actualizar perfil
   Future<void> updateUserProfile(
       String uid, Map<String, dynamic> updates) async {
     try {
@@ -127,7 +126,7 @@ class AuthRepository {
     }
   }
 
-  /// Actualizar XP y nivel del usuario
+  /// Actualizar XP
   Future<void> updateXP(String uid, int xpToAdd) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
@@ -139,7 +138,6 @@ class AuthRepository {
       final currentXP = gamification['xp'] as int? ?? 0;
       final newXP = currentXP + xpToAdd;
 
-      // Calcular nuevo nivel (cada 500 XP)
       final newLevel = (newXP / 500).floor() + 1;
 
       await _firestore.collection('users').doc(uid).update({
@@ -179,14 +177,13 @@ class AuthRepository {
         'gamification.badges': FieldValue.arrayUnion([badgeId]),
       });
 
-      // Agregar XP del badge
       await updateXP(uid, xpEarned);
     } catch (e) {
       throw 'Error al desbloquear badge: $e';
     }
   }
 
-  /// Manejo de excepciones de Firebase Auth
+  /// Manejo de excepciones de Auth
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'weak-password':

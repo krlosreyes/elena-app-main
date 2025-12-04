@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/utils/validators.dart';
 import 'package:elena_app/features/auth/providers/auth_provider.dart';
+import 'package:elena_app/ui/layouts/elena_centered_layout.dart';
 
 /// Pantalla de registro de nuevo usuario
 class RegisterScreen extends ConsumerStatefulWidget {

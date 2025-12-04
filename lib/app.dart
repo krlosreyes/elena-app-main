@@ -10,46 +10,27 @@ class ElenaApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
+    final router = AppRouter.router;
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: router,
 
-      // -------------------------------
-      // IDIOMAS SOPORTADOS
-      // -------------------------------
+      // IDIOMA
       locale: const Locale('es'),
       supportedLocales: const [
         Locale('es'),
         Locale('en'),
       ],
 
-      // -------------------------------
-      // LOCALIZACIONES (REQUERIDO)
-      // -------------------------------
+      // LOCALIZACIONES OFICIALES
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
-        DefaultWidgetsLocalizations.delegate,
       ],
 
-      // -------------------------------
-      // BUILDER REQUERIDO PARA WEB
-      // DatePicker y otros widgets
-      // -------------------------------
-      builder: (context, child) {
-        return Localizations.override(
-          context: context,
-          locale: const Locale('es'),
-          child: child!,
-        );
-      },
-
-      // -------------------------------
-      // TEMA GLOBAL
-      // -------------------------------
+      // TEMA
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: ElenaColors.primary,

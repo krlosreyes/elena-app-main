@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:elena_app/features/auth/providers/auth_provider.dart';
-
 import '../data/models/onboarding_state.dart';
+import '../../../core/utils/calculators.dart';
 
 class OnboardingController extends StateNotifier<OnboardingState> {
   final Ref ref;
@@ -45,12 +45,12 @@ class OnboardingController extends StateNotifier<OnboardingState> {
   // -------------------------
   void setExerciseList(List<String> exercises) {
     state = state.copyWith(
-      exerciseTypes: exercises, // Ajusta el nombre según tu modelo
+      exerciseTypes: exercises,
     );
   }
 
   // -------------------------
-  // TIPOS DE ALIMENTACION
+  // TIPO DIETA
   // -------------------------
   void setDietType(String diet) {
     state = state.copyWith(
@@ -59,9 +59,8 @@ class OnboardingController extends StateNotifier<OnboardingState> {
   }
 
   // -------------------------
-  // TIPOS DE CONDICIONES MEDICAS
+  // CONDICIONES MÉDICAS
   // -------------------------
-
   void setMedicalConditions(List<String> conditions) {
     state = state.copyWith(
       medicalConditions: conditions,
@@ -87,6 +86,106 @@ class OnboardingController extends StateNotifier<OnboardingState> {
     );
   }
 
+  // -------------------------------------
+  // ⚡ CALCULAR PLAN COMPLETO (VERSIÓN CORRECTA)
+  // -------------------------------------
+  Map<String, dynamic> calculateFullPlan() {
+    final s = state;
+
+    final isMale = s.sexIdentity?.toLowerCase() == "hombre" ||
+        s.sexIdentity?.toLowerCase() == "masculino" ||
+        s.sexIdentity == "M";
+
+    // Edad
+    final age =
+        s.birthdate == null ? 30 : DateTime.now().year - s.birthdate!.year;
+
+    // % Grasa
+    final bodyFat = BodyCalculators.calculateBodyFatPercentage(
+      heightCm: s.height ?? 0,
+      waistCm: s.waistCm ?? 0,
+      neckCm: s.neckCm ?? 0,
+      hipCm: isMale ? null : (s.hipCm ?? 0),
+      isMale: isMale,
+    );
+
+    // Masa grasa
+    final fatMass = BodyCalculators.calculateFatMass(
+      weightKg: s.weight ?? 0,
+      bodyFatPercentage: bodyFat,
+    );
+
+    // Masa magra
+    final leanMass = BodyCalculators.calculateLeanMass(
+      weightKg: s.weight ?? 0,
+      fatMassKg: fatMass,
+    );
+
+    // BMR
+    final bmr = BodyCalculators.calculateBMR(
+      weightKg: s.weight ?? 0,
+      heightCm: s.height ?? 0,
+      age: age,
+      isMale: isMale,
+    );
+
+    // Actividad
+    final factor = BodyCalculators.getActivityFactor(
+      s.exerciseTypes?.length ?? 0,
+    );
+
+    // TDEE
+    final tdee = BodyCalculators.calculateTDEE(
+      bmr: bmr,
+      activityLevel: factor,
+    );
+
+    // Objetivo recomendado
+    final recommendedGoal = leanMass / (s.weight == 0 ? 1 : s.weight!) < 0.75
+        ? "lose_fat"
+        : "recomposition";
+
+    // Calorías objetivo
+    final calorieGoal = BodyCalculators.calculateCalorieGoal(
+      tdee: tdee,
+      goal: recommendedGoal,
+    );
+
+    // Proteína
+    final proteinTarget = BodyCalculators.calculateProteinTarget(
+      leanMassKg: leanMass,
+    );
+
+    // Guardar en estado
+    state = state.copyWith(
+      bodyFatPercentage: bodyFat,
+      fatMass: fatMass,
+      leanMass: leanMass,
+      bmr: bmr,
+      tdee: tdee,
+      calorieGoal: calorieGoal,
+      proteinTarget: proteinTarget,
+      recommendedGoal: recommendedGoal,
+    );
+
+    return {
+      "age": age,
+      "bodyFat": bodyFat,
+      "fatMass": fatMass,
+      "leanMass": leanMass,
+      "bmr": bmr,
+      "tdee": tdee,
+      "calorieGoal": calorieGoal,
+      "proteinGoal": proteinTarget,
+      "recommendedGoal": recommendedGoal,
+      "fastingRecommendation": (s.knowsFasting ?? false) ? "16:8" : "12:12",
+      "exerciseRecommendation": (s.exerciseTypes?.length ?? 0) <= 2
+          ? "Comenzar con 2 días"
+          : "Aumentar a 3 días",
+      "alertMessage": null,
+    };
+  }
+
   // -------------------------
   // GUARDAR EN FIRESTORE
   // -------------------------
@@ -107,9 +206,7 @@ class OnboardingController extends StateNotifier<OnboardingState> {
   }
 }
 
-// -------------------------
-// PROVIDER ÚNICO
-// -------------------------
+// PROVIDER
 final onboardingControllerProvider =
     StateNotifierProvider<OnboardingController, OnboardingState>((ref) {
   return OnboardingController(ref);

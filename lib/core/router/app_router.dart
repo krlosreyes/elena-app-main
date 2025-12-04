@@ -1,130 +1,129 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// Auth
+import '../../ui/layouts/app_shell.dart';
+
+// Screens
+import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/nutrition/presentation/screens/meal_register_screen.dart';
+import '../../features/fasting/presentation/screens/fasting_timer_screen.dart';
+import '../../features/workout/presentation/screens/workout_register_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
-
-// Onboarding (nuevos archivos)
 import '../../features/onboarding/presentation/screens/onboarding_profile_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_biometrics_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_results_screen.dart';
 
-// Main app screens
-import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
-import '../../features/fasting/presentation/screens/fasting_timer_screen.dart';
-import '../../features/nutrition/presentation/screens/meal_register_screen.dart';
-import '../../features/workout/presentation/screens/workout_register_screen.dart';
-import '../../features/body_composition/presentation/screens/weekly_checkin_screen.dart';
-import '../../features/history/presentation/screens/history_screen.dart';
+import 'package:elena_app/core/router/router_refresh.dart';
 
-/// Provider del router principal
-final appRouterProvider = Provider<GoRouter>((ref) {
-  return GoRouter(
-    initialLocation: '/login',
+class AppRouter {
+  static GoRouter router = GoRouter(
+    initialLocation: "/login",
 
-    // ---------------------------------------------------
-    // REDIRECT DE AUTENTICACIÓN
-    // ---------------------------------------------------
+    // ------------------------------------------------------
+    // SOLUCIÓN CLAVE: Reconstruye GoRouter al cambiar auth
+    // ------------------------------------------------------
+    refreshListenable: GoRouterRefreshStream(
+      FirebaseAuth.instance.authStateChanges(),
+    ),
+
+    // ------------------------------------------------------
+    // REDIRECT GLOBAL
+    // ------------------------------------------------------
     redirect: (context, state) {
       final user = FirebaseAuth.instance.currentUser;
-      final isAuth = user != null;
 
-      final publicRoutes = ['/login', '/register'];
-      final isPublicRoute = publicRoutes.contains(state.matchedLocation);
+      final loggingIn = state.matchedLocation == "/login";
+      final registering = state.matchedLocation == "/register";
+      final onboarding = state.matchedLocation.startsWith("/onboarding");
 
-      // Si NO está autenticado y va a una ruta privada
-      if (!isAuth && !isPublicRoute) {
-        return '/login';
+      // Si no está autenticado → solo puede ir a login o register
+      if (user == null) {
+        if (!loggingIn && !registering) {
+          return "/login";
+        }
+        return null;
       }
 
-      // Si está autenticado e intenta ir a login/register
-      if (isAuth && isPublicRoute) {
-        return '/dashboard';
+      // Si ya está autenticado → no volver a login/register
+      if (loggingIn || registering) {
+        return "/dashboard";
       }
 
+      // Onboarding intacto
       return null;
     },
 
-    // ---------------------------------------------------
-    // RUTAS
-    // ---------------------------------------------------
     routes: [
-      // ------------------
-      // AUTH
-      // ------------------
+      // ---------------------------
+      // RUTAS PÚBLICAS
+      // ---------------------------
       GoRoute(
-        path: '/login',
+        path: "/login",
         builder: (_, __) => const LoginScreen(),
       ),
       GoRoute(
-        path: '/register',
+        path: "/register",
         builder: (_, __) => const RegisterScreen(),
       ),
 
-      // ------------------
-      // ONBOARDING NUEVO
-      // ------------------
-
-      /// Pantalla 1 – Perfil personal
-      // ------------------
-// ONBOARDING NUEVO
-// ------------------
-
       GoRoute(
-        path: '/onboarding/profile',
+        path: "/onboarding/profile",
         builder: (_, __) => const OnboardingProfileScreen(),
       ),
-
       GoRoute(
-        path: '/onboarding/biometrics',
+        path: "/onboarding/biometrics",
         builder: (_, __) => const OnboardingBiometricsScreen(),
       ),
-
       GoRoute(
-        path: '/onboarding/results',
+        path: "/onboarding/results",
         builder: (_, __) => const OnboardingResultsScreen(),
       ),
 
-      // ------------------
-      // MAIN APP
-      // ------------------
-
-      GoRoute(
-        path: '/dashboard',
-        builder: (_, __) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: '/fasting',
-        builder: (_, __) => const FastingTimerScreen(),
-      ),
-      GoRoute(
-        path: '/register-meal',
-        builder: (_, __) => const MealRegisterScreen(),
-      ),
-      GoRoute(
-        path: '/register-workout',
-        builder: (_, __) => const WorkoutRegisterScreen(),
-      ),
-      GoRoute(
-        path: '/weekly-checkin',
-        builder: (_, __) => const WeeklyCheckinScreen(),
-      ),
-      GoRoute(
-        path: '/history',
-        builder: (_, __) => const HistoryScreen(),
+      // ---------------------------
+      // SHELL (NAV BAR)
+      // ---------------------------
+      ShellRoute(
+        builder: (context, state, child) {
+          final index = _calculateCurrentIndex(state.matchedLocation);
+          return AppShell(
+            child: child,
+            currentIndex: index,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: "/dashboard",
+            builder: (_, __) => const DashboardScreen(),
+          ),
+          GoRoute(
+            path: "/register-meal",
+            builder: (_, __) => const MealRegisterScreen(),
+          ),
+          GoRoute(
+            path: "/fasting",
+            builder: (_, __) => const FastingTimerScreen(),
+          ),
+          GoRoute(
+            path: "/register-workout",
+            builder: (_, __) => const WorkoutRegisterScreen(),
+          ),
+          GoRoute(
+            path: "/profile",
+            builder: (_, __) => const ProfileScreen(),
+          ),
+        ],
       ),
     ],
-
-    // Error – pantalla genérica
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Text(
-          'Página no encontrada: ${state.matchedLocation}',
-        ),
-      ),
-    ),
   );
-});
+}
+
+int _calculateCurrentIndex(String location) {
+  if (location.startsWith("/dashboard")) return 0;
+  if (location.startsWith("/register-meal")) return 1;
+  if (location.startsWith("/fasting")) return 2;
+  if (location.startsWith("/register-workout")) return 3;
+  if (location.startsWith("/profile")) return 4;
+  return 0;
+}

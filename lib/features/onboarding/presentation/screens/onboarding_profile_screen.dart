@@ -388,6 +388,10 @@ class _OnboardingProfileScreenState
                     }).toList(),
                   ),
                   const SizedBox(height: 24),
+
+                  // =====================================================
+                  // BOTON FINAL
+                  // =====================================================
                   ElenaPrimaryButton(
                     label: "Continuar",
                     onPressed: () {
