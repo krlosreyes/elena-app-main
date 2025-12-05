@@ -9,9 +9,9 @@ class OnboardingController extends StateNotifier<OnboardingState> {
 
   OnboardingController(this.ref) : super(const OnboardingState());
 
-  // -------------------------
-  // PERFIL
-  // -------------------------
+  // ------------------------------------------------------
+  // 1. PERFIL
+  // ------------------------------------------------------
   void setProfile({
     String? name,
     DateTime? birthdate,
@@ -40,36 +40,30 @@ class OnboardingController extends StateNotifier<OnboardingState> {
     );
   }
 
-  // -------------------------
-  // TIPOS DE EJERCICIO
-  // -------------------------
+  // ------------------------------------------------------
+  // 2. Ejercicio
+  // ------------------------------------------------------
   void setExerciseList(List<String> exercises) {
-    state = state.copyWith(
-      exerciseTypes: exercises,
-    );
+    state = state.copyWith(exerciseTypes: exercises);
   }
 
-  // -------------------------
-  // TIPO DIETA
-  // -------------------------
+  // ------------------------------------------------------
+  // 3. Dieta
+  // ------------------------------------------------------
   void setDietType(String diet) {
-    state = state.copyWith(
-      dietType: diet,
-    );
+    state = state.copyWith(dietType: diet);
   }
 
-  // -------------------------
-  // CONDICIONES MÉDICAS
-  // -------------------------
+  // ------------------------------------------------------
+  // 4. Condiciones médicas
+  // ------------------------------------------------------
   void setMedicalConditions(List<String> conditions) {
-    state = state.copyWith(
-      medicalConditions: conditions,
-    );
+    state = state.copyWith(medicalConditions: conditions);
   }
 
-  // -------------------------
-  // BIOMÉTRICOS
-  // -------------------------
+  // ------------------------------------------------------
+  // 5. Biometría
+  // ------------------------------------------------------
   void setBiometrics({
     double? weight,
     double? height,
@@ -86,88 +80,135 @@ class OnboardingController extends StateNotifier<OnboardingState> {
     );
   }
 
-  // -------------------------------------
-  // ⚡ CALCULAR PLAN COMPLETO (VERSIÓN CORRECTA)
-  // -------------------------------------
+  // ------------------------------------------------------
+  // 6. CALCULAR PLAN COMPLETO con validaciones básicas
+  // ------------------------------------------------------
   Map<String, dynamic> calculateFullPlan() {
     final s = state;
 
-    final isMale = s.sexIdentity?.toLowerCase() == "hombre" ||
+    final isMale = (s.sexIdentity?.toLowerCase() == "hombre" ||
         s.sexIdentity?.toLowerCase() == "masculino" ||
-        s.sexIdentity == "M";
+        s.sexIdentity == "M");
+
+    // Normalizamos valores de entrada con rangos razonables
+    final double weight = (s.weight ?? 0).clamp(35, 250).toDouble(); // kg
+    final double heightCm = (s.height ?? 0).clamp(130, 220).toDouble(); // cm
+    final double neck = (s.neckCm ?? 0).toDouble();
+    final double waist = (s.waistCm ?? 0).toDouble();
+    final double hip = (s.hipCm ?? 0).toDouble();
 
     // Edad
-    final age =
+    final int age =
         s.birthdate == null ? 30 : DateTime.now().year - s.birthdate!.year;
 
-    // % Grasa
-    final bodyFat = BodyCalculators.calculateBodyFatPercentage(
-      heightCm: s.height ?? 0,
-      waistCm: s.waistCm ?? 0,
-      neckCm: s.neckCm ?? 0,
-      hipCm: isMale ? null : (s.hipCm ?? 0),
-      isMale: isMale,
-    );
+    // --------------------------------------------------
+    // 1) VALIDAR MEDIDAS – ¿TIENEN SENTIDO?
+    // --------------------------------------------------
+    bool invalidMeasurements = false;
+    String? alertMessage;
 
-    // Masa grasa
+    // Rango fisiológico básico
+    if (weight < 35 || heightCm < 130) {
+      invalidMeasurements = true;
+      alertMessage =
+          "Tus datos de peso/estatura parecen fuera de rango. Revisa si los ingresaste correctamente.";
+    }
+
+    if (neck <= 0 || waist <= 0) {
+      invalidMeasurements = true;
+      alertMessage =
+          "Faltan medidas de cuello/cintura para estimar correctamente tu composición corporal.";
+    }
+
+    // Caso típico de Navy Method roto: cuello casi igual o mayor a cintura
+    if (!invalidMeasurements && (waist - neck) < 4) {
+      invalidMeasurements = true;
+      alertMessage =
+          "La relación entre cuello y cintura no es habitual. Es posible que la medición del cuello esté muy alta. Usa la cinta en la parte más angosta del cuello.";
+    }
+
+    // Para mujer / NB se suele requerir cadera > 0
+    final bool needsHip = !isMale;
+    if (!invalidMeasurements && needsHip && hip <= 0) {
+      invalidMeasurements = true;
+      alertMessage =
+          "Para tu perfil necesitamos también la medida de cadera para estimar bien el porcentaje de grasa.";
+    }
+
+    // --------------------------------------------------
+    // 2) CALCULAR % GRASA
+    // --------------------------------------------------
+    double bodyFat;
+
+    if (invalidMeasurements) {
+      // Fallback conservador según sexo
+      bodyFat = isMale ? 22.0 : 30.0;
+    } else {
+      final raw = BodyCalculators.calculateBodyFatPercentage(
+        heightCm: heightCm,
+        waistCm: waist,
+        neckCm: neck,
+        hipCm: needsHip ? hip : null,
+        isMale: isMale,
+      );
+
+      if (raw.isNaN || raw.isInfinite) {
+        bodyFat = isMale ? 22.0 : 30.0;
+        alertMessage ??=
+            "No pudimos calcular tu % de grasa con precisión. Usamos una estimación conservadora.";
+      } else {
+        // Clamps para evitar valores absurdos (deportista élite / obesidad extrema)
+        bodyFat = raw.clamp(5.0, 45.0);
+      }
+    }
+
+    // --------------------------------------------------
+    // 3) MASA GRASA Y MAGRA
+    // --------------------------------------------------
     final fatMass = BodyCalculators.calculateFatMass(
-      weightKg: s.weight ?? 0,
+      weightKg: weight,
       bodyFatPercentage: bodyFat,
     );
-
-    // Masa magra
     final leanMass = BodyCalculators.calculateLeanMass(
-      weightKg: s.weight ?? 0,
+      weightKg: weight,
       fatMassKg: fatMass,
     );
 
-    // BMR
+    // --------------------------------------------------
+    // 4) BMR y TDEE
+    // --------------------------------------------------
     final bmr = BodyCalculators.calculateBMR(
-      weightKg: s.weight ?? 0,
-      heightCm: s.height ?? 0,
+      weightKg: weight,
+      heightCm: heightCm,
       age: age,
       isMale: isMale,
     );
 
-    // Actividad
-    final factor = BodyCalculators.getActivityFactor(
-      s.exerciseTypes?.length ?? 0,
-    );
+    final activityFactor =
+        BodyCalculators.getActivityFactor(s.exerciseTypes?.length ?? 0);
 
-    // TDEE
     final tdee = BodyCalculators.calculateTDEE(
       bmr: bmr,
-      activityLevel: factor,
+      activityLevel: activityFactor,
     );
 
-    // Objetivo recomendado
-    final recommendedGoal = leanMass / (s.weight == 0 ? 1 : s.weight!) < 0.75
-        ? "lose_fat"
-        : "recomposition";
+    // --------------------------------------------------
+    // 5) OBJETIVO Y MACROS
+    // --------------------------------------------------
+    final ratioLean = weight <= 0 ? 0.0 : (leanMass / weight);
+    final recommendedGoal = ratioLean < 0.75 ? "lose_fat" : "recomposition";
 
-    // Calorías objetivo
     final calorieGoal = BodyCalculators.calculateCalorieGoal(
       tdee: tdee,
       goal: recommendedGoal,
     );
 
-    // Proteína
-    final proteinTarget = BodyCalculators.calculateProteinTarget(
-      leanMassKg: leanMass,
-    );
+    final proteinTarget =
+        BodyCalculators.calculateProteinTarget(leanMassKg: leanMass);
 
-    // Guardar en estado
-    state = state.copyWith(
-      bodyFatPercentage: bodyFat,
-      fatMass: fatMass,
-      leanMass: leanMass,
-      bmr: bmr,
-      tdee: tdee,
-      calorieGoal: calorieGoal,
-      proteinTarget: proteinTarget,
-      recommendedGoal: recommendedGoal,
-    );
-
+    // --------------------------------------------------
+    // 6) Devolver plan + mensaje
+    // --------------------------------------------------
     return {
       "age": age,
       "bodyFat": bodyFat,
@@ -182,31 +223,61 @@ class OnboardingController extends StateNotifier<OnboardingState> {
       "exerciseRecommendation": (s.exerciseTypes?.length ?? 0) <= 2
           ? "Comenzar con 2 días"
           : "Aumentar a 3 días",
-      "alertMessage": null,
+      "alertMessage": alertMessage,
     };
   }
 
-  // -------------------------
-  // GUARDAR EN FIRESTORE
-  // -------------------------
+  // ------------------------------------------------------
+  // 7. Aplicar plan al estado
+  // ------------------------------------------------------
+  void applyPlanToState(Map<String, dynamic> plan) {
+    state = state.copyWith(
+      bodyFatPercentage: (plan["bodyFat"] as num?)?.toDouble(),
+      fatMass: (plan["fatMass"] as num?)?.toDouble(),
+      leanMass: (plan["leanMass"] as num?)?.toDouble(),
+      bmr: (plan["bmr"] as num?)?.toDouble(),
+      tdee: (plan["tdee"] as num?)?.toDouble(),
+      calorieGoal: (plan["calorieGoal"] as num?)?.toDouble(),
+      proteinTarget: (plan["proteinGoal"] as num?)?.toDouble(),
+      recommendedGoal: plan["recommendedGoal"] as String?,
+    );
+  }
+
+  // ------------------------------------------------------
+  // 8. GUARDAR EN FIRESTORE (estado + plan)
+  // ------------------------------------------------------
   Future<void> saveToFirestore() async {
     try {
       state = state.copyWith(isSaving: true);
 
       final uid = ref.read(authRepositoryProvider).currentUser?.uid;
-      if (uid == null) throw Exception("El usuario no está autenticado.");
+      if (uid == null) throw Exception("Usuario no autenticado.");
+
+      // 1. Calcular plan
+      final plan = calculateFullPlan();
+
+      // 2. Aplicar al state
+      applyPlanToState(plan);
+
+      // 3. Guardar state + plan
+      final data = {
+        ...state.toJson(),
+        "plan": plan,
+      };
 
       await FirebaseFirestore.instance
           .collection("users")
           .doc(uid)
-          .set(state.toJson(), SetOptions(merge: true));
+          .set(data, SetOptions(merge: true));
     } finally {
       state = state.copyWith(isSaving: false);
     }
   }
 }
 
-// PROVIDER
+// ------------------------------------------------------
+// PROVIDER PRINCIPAL
+// ------------------------------------------------------
 final onboardingControllerProvider =
     StateNotifierProvider<OnboardingController, OnboardingState>((ref) {
   return OnboardingController(ref);

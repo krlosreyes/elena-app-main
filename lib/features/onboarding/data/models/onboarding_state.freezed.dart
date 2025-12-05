@@ -20,24 +20,35 @@ OnboardingState _$OnboardingStateFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$OnboardingState {
+// -------------------------
+// DATOS PERSONALES
+// -------------------------
   String? get name => throw _privateConstructorUsedError;
   DateTime? get birthdate => throw _privateConstructorUsedError;
   String? get sexIdentity => throw _privateConstructorUsedError;
   String? get occupation => throw _privateConstructorUsedError;
-  String? get country => throw _privateConstructorUsedError;
+  String? get country =>
+      throw _privateConstructorUsedError; // -------------------------
+// ESTILO DE VIDA
+// -------------------------
   bool? get doesExercise => throw _privateConstructorUsedError;
-  List<String>? get exerciseTypes =>
-      throw _privateConstructorUsedError; // 👈 NUEVO
-  String? get dietType => throw _privateConstructorUsedError;
-  List<String>? get medicalConditions => throw _privateConstructorUsedError;
+  List<String> get exerciseTypes => throw _privateConstructorUsedError;
   int? get sittingHoursPerDay => throw _privateConstructorUsedError;
   String? get alcoholFrequency => throw _privateConstructorUsedError;
-  bool? get knowsFasting => throw _privateConstructorUsedError;
+  String? get dietType => throw _privateConstructorUsedError;
+  List<String> get medicalConditions => throw _privateConstructorUsedError;
+  bool? get knowsFasting =>
+      throw _privateConstructorUsedError; // -------------------------
+// BIOMÉTRICOS
+// -------------------------
   double? get weight => throw _privateConstructorUsedError;
   double? get height => throw _privateConstructorUsedError;
   double? get neckCm => throw _privateConstructorUsedError;
   double? get waistCm => throw _privateConstructorUsedError;
-  double? get hipCm => throw _privateConstructorUsedError;
+  double? get hipCm =>
+      throw _privateConstructorUsedError; // -------------------------
+// CÁLCULOS
+// -------------------------
   double? get bodyFatPercentage => throw _privateConstructorUsedError;
   double? get fatMass => throw _privateConstructorUsedError;
   double? get leanMass => throw _privateConstructorUsedError;
@@ -45,7 +56,24 @@ mixin _$OnboardingState {
   double? get tdee => throw _privateConstructorUsedError;
   double? get proteinTarget => throw _privateConstructorUsedError;
   double? get calorieGoal => throw _privateConstructorUsedError;
-  String? get recommendedGoal => throw _privateConstructorUsedError;
+  String? get recommendedGoal =>
+      throw _privateConstructorUsedError; // -------------------------
+// 🔥 NUEVOS CAMPOS (con defaults inteligentes)
+// -------------------------
+  int get trainingDaysPerWeek =>
+      throw _privateConstructorUsedError; // Entrenamiento estándar
+  int get minutesPerSession =>
+      throw _privateConstructorUsedError; // Duración estándar recomendada
+  String get equipment =>
+      throw _privateConstructorUsedError; // Sin equipo por defecto
+  List<String> get foodRestrictions => throw _privateConstructorUsedError;
+  String get budgetLevel =>
+      throw _privateConstructorUsedError; // Presupuesto promedio
+  String get preferredEatingStart => throw _privateConstructorUsedError;
+  String get preferredEatingEnd =>
+      throw _privateConstructorUsedError; // -------------------------
+// ESTADO
+// -------------------------
   bool get isSaving => throw _privateConstructorUsedError;
 
   /// Serializes this OnboardingState to a JSON map.
@@ -71,11 +99,11 @@ abstract class $OnboardingStateCopyWith<$Res> {
       String? occupation,
       String? country,
       bool? doesExercise,
-      List<String>? exerciseTypes,
-      String? dietType,
-      List<String>? medicalConditions,
+      List<String> exerciseTypes,
       int? sittingHoursPerDay,
       String? alcoholFrequency,
+      String? dietType,
+      List<String> medicalConditions,
       bool? knowsFasting,
       double? weight,
       double? height,
@@ -90,6 +118,13 @@ abstract class $OnboardingStateCopyWith<$Res> {
       double? proteinTarget,
       double? calorieGoal,
       String? recommendedGoal,
+      int trainingDaysPerWeek,
+      int minutesPerSession,
+      String equipment,
+      List<String> foodRestrictions,
+      String budgetLevel,
+      String preferredEatingStart,
+      String preferredEatingEnd,
       bool isSaving});
 }
 
@@ -114,11 +149,11 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
     Object? occupation = freezed,
     Object? country = freezed,
     Object? doesExercise = freezed,
-    Object? exerciseTypes = freezed,
-    Object? dietType = freezed,
-    Object? medicalConditions = freezed,
+    Object? exerciseTypes = null,
     Object? sittingHoursPerDay = freezed,
     Object? alcoholFrequency = freezed,
+    Object? dietType = freezed,
+    Object? medicalConditions = null,
     Object? knowsFasting = freezed,
     Object? weight = freezed,
     Object? height = freezed,
@@ -133,6 +168,13 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
     Object? proteinTarget = freezed,
     Object? calorieGoal = freezed,
     Object? recommendedGoal = freezed,
+    Object? trainingDaysPerWeek = null,
+    Object? minutesPerSession = null,
+    Object? equipment = null,
+    Object? foodRestrictions = null,
+    Object? budgetLevel = null,
+    Object? preferredEatingStart = null,
+    Object? preferredEatingEnd = null,
     Object? isSaving = null,
   }) {
     return _then(_value.copyWith(
@@ -160,18 +202,10 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
           ? _value.doesExercise
           : doesExercise // ignore: cast_nullable_to_non_nullable
               as bool?,
-      exerciseTypes: freezed == exerciseTypes
+      exerciseTypes: null == exerciseTypes
           ? _value.exerciseTypes
           : exerciseTypes // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
-      dietType: freezed == dietType
-          ? _value.dietType
-          : dietType // ignore: cast_nullable_to_non_nullable
-              as String?,
-      medicalConditions: freezed == medicalConditions
-          ? _value.medicalConditions
-          : medicalConditions // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
+              as List<String>,
       sittingHoursPerDay: freezed == sittingHoursPerDay
           ? _value.sittingHoursPerDay
           : sittingHoursPerDay // ignore: cast_nullable_to_non_nullable
@@ -180,6 +214,14 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
           ? _value.alcoholFrequency
           : alcoholFrequency // ignore: cast_nullable_to_non_nullable
               as String?,
+      dietType: freezed == dietType
+          ? _value.dietType
+          : dietType // ignore: cast_nullable_to_non_nullable
+              as String?,
+      medicalConditions: null == medicalConditions
+          ? _value.medicalConditions
+          : medicalConditions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       knowsFasting: freezed == knowsFasting
           ? _value.knowsFasting
           : knowsFasting // ignore: cast_nullable_to_non_nullable
@@ -236,6 +278,34 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
           ? _value.recommendedGoal
           : recommendedGoal // ignore: cast_nullable_to_non_nullable
               as String?,
+      trainingDaysPerWeek: null == trainingDaysPerWeek
+          ? _value.trainingDaysPerWeek
+          : trainingDaysPerWeek // ignore: cast_nullable_to_non_nullable
+              as int,
+      minutesPerSession: null == minutesPerSession
+          ? _value.minutesPerSession
+          : minutesPerSession // ignore: cast_nullable_to_non_nullable
+              as int,
+      equipment: null == equipment
+          ? _value.equipment
+          : equipment // ignore: cast_nullable_to_non_nullable
+              as String,
+      foodRestrictions: null == foodRestrictions
+          ? _value.foodRestrictions
+          : foodRestrictions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      budgetLevel: null == budgetLevel
+          ? _value.budgetLevel
+          : budgetLevel // ignore: cast_nullable_to_non_nullable
+              as String,
+      preferredEatingStart: null == preferredEatingStart
+          ? _value.preferredEatingStart
+          : preferredEatingStart // ignore: cast_nullable_to_non_nullable
+              as String,
+      preferredEatingEnd: null == preferredEatingEnd
+          ? _value.preferredEatingEnd
+          : preferredEatingEnd // ignore: cast_nullable_to_non_nullable
+              as String,
       isSaving: null == isSaving
           ? _value.isSaving
           : isSaving // ignore: cast_nullable_to_non_nullable
@@ -259,11 +329,11 @@ abstract class _$$OnboardingStateImplCopyWith<$Res>
       String? occupation,
       String? country,
       bool? doesExercise,
-      List<String>? exerciseTypes,
-      String? dietType,
-      List<String>? medicalConditions,
+      List<String> exerciseTypes,
       int? sittingHoursPerDay,
       String? alcoholFrequency,
+      String? dietType,
+      List<String> medicalConditions,
       bool? knowsFasting,
       double? weight,
       double? height,
@@ -278,6 +348,13 @@ abstract class _$$OnboardingStateImplCopyWith<$Res>
       double? proteinTarget,
       double? calorieGoal,
       String? recommendedGoal,
+      int trainingDaysPerWeek,
+      int minutesPerSession,
+      String equipment,
+      List<String> foodRestrictions,
+      String budgetLevel,
+      String preferredEatingStart,
+      String preferredEatingEnd,
       bool isSaving});
 }
 
@@ -300,11 +377,11 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
     Object? occupation = freezed,
     Object? country = freezed,
     Object? doesExercise = freezed,
-    Object? exerciseTypes = freezed,
-    Object? dietType = freezed,
-    Object? medicalConditions = freezed,
+    Object? exerciseTypes = null,
     Object? sittingHoursPerDay = freezed,
     Object? alcoholFrequency = freezed,
+    Object? dietType = freezed,
+    Object? medicalConditions = null,
     Object? knowsFasting = freezed,
     Object? weight = freezed,
     Object? height = freezed,
@@ -319,6 +396,13 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
     Object? proteinTarget = freezed,
     Object? calorieGoal = freezed,
     Object? recommendedGoal = freezed,
+    Object? trainingDaysPerWeek = null,
+    Object? minutesPerSession = null,
+    Object? equipment = null,
+    Object? foodRestrictions = null,
+    Object? budgetLevel = null,
+    Object? preferredEatingStart = null,
+    Object? preferredEatingEnd = null,
     Object? isSaving = null,
   }) {
     return _then(_$OnboardingStateImpl(
@@ -346,18 +430,10 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
           ? _value.doesExercise
           : doesExercise // ignore: cast_nullable_to_non_nullable
               as bool?,
-      exerciseTypes: freezed == exerciseTypes
+      exerciseTypes: null == exerciseTypes
           ? _value._exerciseTypes
           : exerciseTypes // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
-      dietType: freezed == dietType
-          ? _value.dietType
-          : dietType // ignore: cast_nullable_to_non_nullable
-              as String?,
-      medicalConditions: freezed == medicalConditions
-          ? _value._medicalConditions
-          : medicalConditions // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
+              as List<String>,
       sittingHoursPerDay: freezed == sittingHoursPerDay
           ? _value.sittingHoursPerDay
           : sittingHoursPerDay // ignore: cast_nullable_to_non_nullable
@@ -366,6 +442,14 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
           ? _value.alcoholFrequency
           : alcoholFrequency // ignore: cast_nullable_to_non_nullable
               as String?,
+      dietType: freezed == dietType
+          ? _value.dietType
+          : dietType // ignore: cast_nullable_to_non_nullable
+              as String?,
+      medicalConditions: null == medicalConditions
+          ? _value._medicalConditions
+          : medicalConditions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       knowsFasting: freezed == knowsFasting
           ? _value.knowsFasting
           : knowsFasting // ignore: cast_nullable_to_non_nullable
@@ -422,6 +506,34 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
           ? _value.recommendedGoal
           : recommendedGoal // ignore: cast_nullable_to_non_nullable
               as String?,
+      trainingDaysPerWeek: null == trainingDaysPerWeek
+          ? _value.trainingDaysPerWeek
+          : trainingDaysPerWeek // ignore: cast_nullable_to_non_nullable
+              as int,
+      minutesPerSession: null == minutesPerSession
+          ? _value.minutesPerSession
+          : minutesPerSession // ignore: cast_nullable_to_non_nullable
+              as int,
+      equipment: null == equipment
+          ? _value.equipment
+          : equipment // ignore: cast_nullable_to_non_nullable
+              as String,
+      foodRestrictions: null == foodRestrictions
+          ? _value._foodRestrictions
+          : foodRestrictions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      budgetLevel: null == budgetLevel
+          ? _value.budgetLevel
+          : budgetLevel // ignore: cast_nullable_to_non_nullable
+              as String,
+      preferredEatingStart: null == preferredEatingStart
+          ? _value.preferredEatingStart
+          : preferredEatingStart // ignore: cast_nullable_to_non_nullable
+              as String,
+      preferredEatingEnd: null == preferredEatingEnd
+          ? _value.preferredEatingEnd
+          : preferredEatingEnd // ignore: cast_nullable_to_non_nullable
+              as String,
       isSaving: null == isSaving
           ? _value.isSaving
           : isSaving // ignore: cast_nullable_to_non_nullable
@@ -440,11 +552,11 @@ class _$OnboardingStateImpl implements _OnboardingState {
       this.occupation,
       this.country,
       this.doesExercise,
-      final List<String>? exerciseTypes,
-      this.dietType,
-      final List<String>? medicalConditions,
+      final List<String> exerciseTypes = const [],
       this.sittingHoursPerDay,
       this.alcoholFrequency,
+      this.dietType,
+      final List<String> medicalConditions = const [],
       this.knowsFasting,
       this.weight,
       this.height,
@@ -459,13 +571,24 @@ class _$OnboardingStateImpl implements _OnboardingState {
       this.proteinTarget,
       this.calorieGoal,
       this.recommendedGoal,
+      this.trainingDaysPerWeek = 3,
+      this.minutesPerSession = 30,
+      this.equipment = "bodyweight",
+      final List<String> foodRestrictions = const [],
+      this.budgetLevel = "medium",
+      this.preferredEatingStart = "12:00",
+      this.preferredEatingEnd = "20:00",
       this.isSaving = false})
       : _exerciseTypes = exerciseTypes,
-        _medicalConditions = medicalConditions;
+        _medicalConditions = medicalConditions,
+        _foodRestrictions = foodRestrictions;
 
   factory _$OnboardingStateImpl.fromJson(Map<String, dynamic> json) =>
       _$$OnboardingStateImplFromJson(json);
 
+// -------------------------
+// DATOS PERSONALES
+// -------------------------
   @override
   final String? name;
   @override
@@ -476,30 +599,18 @@ class _$OnboardingStateImpl implements _OnboardingState {
   final String? occupation;
   @override
   final String? country;
+// -------------------------
+// ESTILO DE VIDA
+// -------------------------
   @override
   final bool? doesExercise;
-  final List<String>? _exerciseTypes;
+  final List<String> _exerciseTypes;
   @override
-  List<String>? get exerciseTypes {
-    final value = _exerciseTypes;
-    if (value == null) return null;
+  @JsonKey()
+  List<String> get exerciseTypes {
     if (_exerciseTypes is EqualUnmodifiableListView) return _exerciseTypes;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
-  }
-
-// 👈 NUEVO
-  @override
-  final String? dietType;
-  final List<String>? _medicalConditions;
-  @override
-  List<String>? get medicalConditions {
-    final value = _medicalConditions;
-    if (value == null) return null;
-    if (_medicalConditions is EqualUnmodifiableListView)
-      return _medicalConditions;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
+    return EqualUnmodifiableListView(_exerciseTypes);
   }
 
   @override
@@ -507,7 +618,22 @@ class _$OnboardingStateImpl implements _OnboardingState {
   @override
   final String? alcoholFrequency;
   @override
+  final String? dietType;
+  final List<String> _medicalConditions;
+  @override
+  @JsonKey()
+  List<String> get medicalConditions {
+    if (_medicalConditions is EqualUnmodifiableListView)
+      return _medicalConditions;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_medicalConditions);
+  }
+
+  @override
   final bool? knowsFasting;
+// -------------------------
+// BIOMÉTRICOS
+// -------------------------
   @override
   final double? weight;
   @override
@@ -518,6 +644,9 @@ class _$OnboardingStateImpl implements _OnboardingState {
   final double? waistCm;
   @override
   final double? hipCm;
+// -------------------------
+// CÁLCULOS
+// -------------------------
   @override
   final double? bodyFatPercentage;
   @override
@@ -534,13 +663,52 @@ class _$OnboardingStateImpl implements _OnboardingState {
   final double? calorieGoal;
   @override
   final String? recommendedGoal;
+// -------------------------
+// 🔥 NUEVOS CAMPOS (con defaults inteligentes)
+// -------------------------
+  @override
+  @JsonKey()
+  final int trainingDaysPerWeek;
+// Entrenamiento estándar
+  @override
+  @JsonKey()
+  final int minutesPerSession;
+// Duración estándar recomendada
+  @override
+  @JsonKey()
+  final String equipment;
+// Sin equipo por defecto
+  final List<String> _foodRestrictions;
+// Sin equipo por defecto
+  @override
+  @JsonKey()
+  List<String> get foodRestrictions {
+    if (_foodRestrictions is EqualUnmodifiableListView)
+      return _foodRestrictions;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_foodRestrictions);
+  }
+
+  @override
+  @JsonKey()
+  final String budgetLevel;
+// Presupuesto promedio
+  @override
+  @JsonKey()
+  final String preferredEatingStart;
+  @override
+  @JsonKey()
+  final String preferredEatingEnd;
+// -------------------------
+// ESTADO
+// -------------------------
   @override
   @JsonKey()
   final bool isSaving;
 
   @override
   String toString() {
-    return 'OnboardingState(name: $name, birthdate: $birthdate, sexIdentity: $sexIdentity, occupation: $occupation, country: $country, doesExercise: $doesExercise, exerciseTypes: $exerciseTypes, dietType: $dietType, medicalConditions: $medicalConditions, sittingHoursPerDay: $sittingHoursPerDay, alcoholFrequency: $alcoholFrequency, knowsFasting: $knowsFasting, weight: $weight, height: $height, neckCm: $neckCm, waistCm: $waistCm, hipCm: $hipCm, bodyFatPercentage: $bodyFatPercentage, fatMass: $fatMass, leanMass: $leanMass, bmr: $bmr, tdee: $tdee, proteinTarget: $proteinTarget, calorieGoal: $calorieGoal, recommendedGoal: $recommendedGoal, isSaving: $isSaving)';
+    return 'OnboardingState(name: $name, birthdate: $birthdate, sexIdentity: $sexIdentity, occupation: $occupation, country: $country, doesExercise: $doesExercise, exerciseTypes: $exerciseTypes, sittingHoursPerDay: $sittingHoursPerDay, alcoholFrequency: $alcoholFrequency, dietType: $dietType, medicalConditions: $medicalConditions, knowsFasting: $knowsFasting, weight: $weight, height: $height, neckCm: $neckCm, waistCm: $waistCm, hipCm: $hipCm, bodyFatPercentage: $bodyFatPercentage, fatMass: $fatMass, leanMass: $leanMass, bmr: $bmr, tdee: $tdee, proteinTarget: $proteinTarget, calorieGoal: $calorieGoal, recommendedGoal: $recommendedGoal, trainingDaysPerWeek: $trainingDaysPerWeek, minutesPerSession: $minutesPerSession, equipment: $equipment, foodRestrictions: $foodRestrictions, budgetLevel: $budgetLevel, preferredEatingStart: $preferredEatingStart, preferredEatingEnd: $preferredEatingEnd, isSaving: $isSaving)';
   }
 
   @override
@@ -560,14 +728,14 @@ class _$OnboardingStateImpl implements _OnboardingState {
                 other.doesExercise == doesExercise) &&
             const DeepCollectionEquality()
                 .equals(other._exerciseTypes, _exerciseTypes) &&
-            (identical(other.dietType, dietType) ||
-                other.dietType == dietType) &&
-            const DeepCollectionEquality()
-                .equals(other._medicalConditions, _medicalConditions) &&
             (identical(other.sittingHoursPerDay, sittingHoursPerDay) ||
                 other.sittingHoursPerDay == sittingHoursPerDay) &&
             (identical(other.alcoholFrequency, alcoholFrequency) ||
                 other.alcoholFrequency == alcoholFrequency) &&
+            (identical(other.dietType, dietType) ||
+                other.dietType == dietType) &&
+            const DeepCollectionEquality()
+                .equals(other._medicalConditions, _medicalConditions) &&
             (identical(other.knowsFasting, knowsFasting) ||
                 other.knowsFasting == knowsFasting) &&
             (identical(other.weight, weight) || other.weight == weight) &&
@@ -588,6 +756,20 @@ class _$OnboardingStateImpl implements _OnboardingState {
                 other.calorieGoal == calorieGoal) &&
             (identical(other.recommendedGoal, recommendedGoal) ||
                 other.recommendedGoal == recommendedGoal) &&
+            (identical(other.trainingDaysPerWeek, trainingDaysPerWeek) ||
+                other.trainingDaysPerWeek == trainingDaysPerWeek) &&
+            (identical(other.minutesPerSession, minutesPerSession) ||
+                other.minutesPerSession == minutesPerSession) &&
+            (identical(other.equipment, equipment) ||
+                other.equipment == equipment) &&
+            const DeepCollectionEquality()
+                .equals(other._foodRestrictions, _foodRestrictions) &&
+            (identical(other.budgetLevel, budgetLevel) ||
+                other.budgetLevel == budgetLevel) &&
+            (identical(other.preferredEatingStart, preferredEatingStart) ||
+                other.preferredEatingStart == preferredEatingStart) &&
+            (identical(other.preferredEatingEnd, preferredEatingEnd) ||
+                other.preferredEatingEnd == preferredEatingEnd) &&
             (identical(other.isSaving, isSaving) ||
                 other.isSaving == isSaving));
   }
@@ -603,10 +785,10 @@ class _$OnboardingStateImpl implements _OnboardingState {
         country,
         doesExercise,
         const DeepCollectionEquality().hash(_exerciseTypes),
-        dietType,
-        const DeepCollectionEquality().hash(_medicalConditions),
         sittingHoursPerDay,
         alcoholFrequency,
+        dietType,
+        const DeepCollectionEquality().hash(_medicalConditions),
         knowsFasting,
         weight,
         height,
@@ -621,6 +803,13 @@ class _$OnboardingStateImpl implements _OnboardingState {
         proteinTarget,
         calorieGoal,
         recommendedGoal,
+        trainingDaysPerWeek,
+        minutesPerSession,
+        equipment,
+        const DeepCollectionEquality().hash(_foodRestrictions),
+        budgetLevel,
+        preferredEatingStart,
+        preferredEatingEnd,
         isSaving
       ]);
 
@@ -649,11 +838,11 @@ abstract class _OnboardingState implements OnboardingState {
       final String? occupation,
       final String? country,
       final bool? doesExercise,
-      final List<String>? exerciseTypes,
-      final String? dietType,
-      final List<String>? medicalConditions,
+      final List<String> exerciseTypes,
       final int? sittingHoursPerDay,
       final String? alcoholFrequency,
+      final String? dietType,
+      final List<String> medicalConditions,
       final bool? knowsFasting,
       final double? weight,
       final double? height,
@@ -668,11 +857,21 @@ abstract class _OnboardingState implements OnboardingState {
       final double? proteinTarget,
       final double? calorieGoal,
       final String? recommendedGoal,
+      final int trainingDaysPerWeek,
+      final int minutesPerSession,
+      final String equipment,
+      final List<String> foodRestrictions,
+      final String budgetLevel,
+      final String preferredEatingStart,
+      final String preferredEatingEnd,
       final bool isSaving}) = _$OnboardingStateImpl;
 
   factory _OnboardingState.fromJson(Map<String, dynamic> json) =
       _$OnboardingStateImpl.fromJson;
 
+// -------------------------
+// DATOS PERSONALES
+// -------------------------
   @override
   String? get name;
   @override
@@ -682,21 +881,25 @@ abstract class _OnboardingState implements OnboardingState {
   @override
   String? get occupation;
   @override
-  String? get country;
+  String? get country; // -------------------------
+// ESTILO DE VIDA
+// -------------------------
   @override
   bool? get doesExercise;
   @override
-  List<String>? get exerciseTypes; // 👈 NUEVO
-  @override
-  String? get dietType;
-  @override
-  List<String>? get medicalConditions;
+  List<String> get exerciseTypes;
   @override
   int? get sittingHoursPerDay;
   @override
   String? get alcoholFrequency;
   @override
-  bool? get knowsFasting;
+  String? get dietType;
+  @override
+  List<String> get medicalConditions;
+  @override
+  bool? get knowsFasting; // -------------------------
+// BIOMÉTRICOS
+// -------------------------
   @override
   double? get weight;
   @override
@@ -706,7 +909,9 @@ abstract class _OnboardingState implements OnboardingState {
   @override
   double? get waistCm;
   @override
-  double? get hipCm;
+  double? get hipCm; // -------------------------
+// CÁLCULOS
+// -------------------------
   @override
   double? get bodyFatPercentage;
   @override
@@ -722,7 +927,25 @@ abstract class _OnboardingState implements OnboardingState {
   @override
   double? get calorieGoal;
   @override
-  String? get recommendedGoal;
+  String? get recommendedGoal; // -------------------------
+// 🔥 NUEVOS CAMPOS (con defaults inteligentes)
+// -------------------------
+  @override
+  int get trainingDaysPerWeek; // Entrenamiento estándar
+  @override
+  int get minutesPerSession; // Duración estándar recomendada
+  @override
+  String get equipment; // Sin equipo por defecto
+  @override
+  List<String> get foodRestrictions;
+  @override
+  String get budgetLevel; // Presupuesto promedio
+  @override
+  String get preferredEatingStart;
+  @override
+  String get preferredEatingEnd; // -------------------------
+// ESTADO
+// -------------------------
   @override
   bool get isSaving;
 

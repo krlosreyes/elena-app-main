@@ -20,25 +20,40 @@ class DashboardScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text("Error: $e")),
         data: (data) {
           if (data == null) {
-            // CORREGIDO: evitar pantalla vacía en el shell
             return const Center(child: CircularProgressIndicator());
           }
 
+          // ========================
+          //  🔥 CAMPOS DEL PERFIL
+          // ========================
           final name = (data["name"] as String?) ?? "Usuario";
+
+          // ========================
+          //  🔥 PLAN CALCULADO
+          // ========================
+          final bodyFat = (data["bodyFatPercentage"] as num?)?.toDouble();
+          final calorieGoal = (data["calorieGoal"] as num?)?.toDouble();
+          final proteinGoal = (data["proteinTarget"] as num?)?.toDouble();
+          final eatingStart = data["preferredEatingStart"] ?? "12:00";
+          final eatingEnd = data["preferredEatingEnd"] ?? "20:00";
+
           final plan = data["plan"] as Map<String, dynamic>?;
 
           final fastingRec =
               (plan?["fastingRecommendation"] as String?) ?? "12:12";
           final exerciseRec =
               (plan?["exerciseRecommendation"] as String?) ?? "2 días";
-          final calorieGoal = (plan?["calorieGoal"] as num?)?.toDouble() ?? 0.0;
 
+          // ========================
+          //  🔥 TRACKING / ESTADO
+          // ========================
           final streak = (data["streak"] as int?) ?? 0;
+          final todayCalories = (data["todayCalories"] as int?) ?? 0;
+
           final exerciseTypes =
               (data["exerciseTypes"] as List?)?.cast<String>() ?? [];
           final days = exerciseTypes.length;
 
-          final todayCalories = (data["todayCalories"] as int?) ?? 0;
           final xp = (data["xp"] as int?) ?? 0;
           final level = (data["level"] as int?) ?? 1;
           final nextLevelXp = (data["nextLevelXp"] as int?) ?? 200;
@@ -50,24 +65,48 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 _Header(name: name),
                 const SizedBox(height: 22),
+
+                // =====================================
+                // 🔥 NUEVA TARJETA DE METABOLISMO
+                // =====================================
+                if (bodyFat != null ||
+                    calorieGoal != null ||
+                    proteinGoal != null)
+                  _DashboardCard(
+                    child: _MetabolismCard(
+                      bodyFat: bodyFat,
+                      calorieGoal: calorieGoal,
+                      proteinGoal: proteinGoal,
+                      eatingStart: eatingStart,
+                      eatingEnd: eatingEnd,
+                    ),
+                  ),
+
+                // AYUNO
                 _DashboardCard(
                   child: _FastingCard(
                     fastingRec: fastingRec,
                     streak: streak,
                   ),
                 ),
+
+                // EJERCICIO
                 _DashboardCard(
                   child: _ExerciseCard(
                     exerciseRec: exerciseRec,
                     days: days,
                   ),
                 ),
+
+                // ALIMENTACIÓN
                 _DashboardCard(
                   child: _FoodCard(
-                    calorieGoal: calorieGoal,
+                    calorieGoal: calorieGoal ?? 0,
                     consumed: todayCalories,
                   ),
                 ),
+
+                // GAMIFICACIÓN
                 _DashboardCard(
                   child: _GamificationCard(
                     xp: xp,
@@ -75,6 +114,7 @@ class DashboardScreen extends ConsumerWidget {
                     nextLevelXp: nextLevelXp,
                   ),
                 ),
+
                 const SizedBox(height: 50),
               ],
             ),
@@ -85,7 +125,9 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
+// ------------------------------------------------------
 // HEADER
+// ------------------------------------------------------
 class _Header extends StatelessWidget {
   final String name;
   const _Header({required this.name});
@@ -103,7 +145,9 @@ class _Header extends StatelessWidget {
   }
 }
 
+// ------------------------------------------------------
 // CARD BASE
+// ------------------------------------------------------
 class _DashboardCard extends StatelessWidget {
   final Widget child;
   const _DashboardCard({required this.child});
@@ -129,7 +173,49 @@ class _DashboardCard extends StatelessWidget {
   }
 }
 
+// ------------------------------------------------------
+// 🔥 METABOLISMO / COMPOSICIÓN
+// ------------------------------------------------------
+class _MetabolismCard extends StatelessWidget {
+  final double? bodyFat;
+  final double? calorieGoal;
+  final double? proteinGoal;
+  final String eatingStart;
+  final String eatingEnd;
+
+  const _MetabolismCard({
+    this.bodyFat,
+    this.calorieGoal,
+    this.proteinGoal,
+    required this.eatingStart,
+    required this.eatingEnd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Tu plan diario",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        if (bodyFat != null)
+          Text("Grasa corporal: ${bodyFat!.toStringAsFixed(1)} %"),
+        if (calorieGoal != null)
+          Text("Calorías objetivo: ${calorieGoal!.toStringAsFixed(0)} kcal"),
+        if (proteinGoal != null)
+          Text("Proteína diaria: ${proteinGoal!.toStringAsFixed(0)} g"),
+        Text("Ventana de comida: $eatingStart – $eatingEnd"),
+      ],
+    );
+  }
+}
+
+// ------------------------------------------------------
 // AYUNO
+// ------------------------------------------------------
 class _FastingCard extends StatelessWidget {
   final String fastingRec;
   final int streak;
@@ -149,7 +235,7 @@ class _FastingCard extends StatelessWidget {
         Text("Racha: $streak días"),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () => context.go('/fasting'), // CORREGIDO
+          onPressed: () => context.go('/fasting'),
           style: ElevatedButton.styleFrom(
             backgroundColor: ElenaColors.primary,
             foregroundColor: Colors.white,
@@ -165,7 +251,9 @@ class _FastingCard extends StatelessWidget {
   }
 }
 
+// ------------------------------------------------------
 // EJERCICIO
+// ------------------------------------------------------
 class _ExerciseCard extends StatelessWidget {
   final String exerciseRec;
   final int days;
@@ -181,11 +269,11 @@ class _ExerciseCard extends StatelessWidget {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
-        Text("Realizas $days días por semana"),
+        Text("Entrenas $days días por semana"),
         Text("Recomendado: $exerciseRec"),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () => context.go('/register-workout'), // CORREGIDO
+          onPressed: () => context.go('/register-workout'),
           style: ElevatedButton.styleFrom(
             backgroundColor: ElenaColors.secondary,
             foregroundColor: Colors.white,
@@ -201,7 +289,9 @@ class _ExerciseCard extends StatelessWidget {
   }
 }
 
+// ------------------------------------------------------
 // ALIMENTACIÓN
+// ------------------------------------------------------
 class _FoodCard extends StatelessWidget {
   final double calorieGoal;
   final int consumed;
@@ -225,7 +315,7 @@ class _FoodCard extends StatelessWidget {
         Text("$consumed kcal consumidas hoy"),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () => context.go('/register-meal'), // CORREGIDO
+          onPressed: () => context.go('/register-meal'),
           style: ElevatedButton.styleFrom(
             backgroundColor: ElenaColors.primary,
             foregroundColor: Colors.white,
@@ -241,7 +331,9 @@ class _FoodCard extends StatelessWidget {
   }
 }
 
+// ------------------------------------------------------
 // GAMIFICACIÓN
+// ------------------------------------------------------
 class _GamificationCard extends StatelessWidget {
   final int xp;
   final int level;

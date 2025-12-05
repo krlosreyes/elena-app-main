@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -281,33 +283,38 @@ class _OnboardingBiometricsScreenState
                       // BOTON FINAL
                       // =====================================================
                       ElenaPrimaryButton(
-                        label: "Calcular mi Plan Personalizado",
-                        onPressed: () async {
-                          final c =
-                              ref.read(onboardingControllerProvider.notifier);
+                          label: "Calcular mi Plan Personalizado",
+                          onPressed: () async {
+                            final c =
+                                ref.read(onboardingControllerProvider.notifier);
 
-                          // BIOMÉTRICOS
-                          c.setBiometrics(
-                            weight: double.tryParse(weightCtrl.text) ?? 0,
-                            height: double.tryParse(heightCtrl.text) ?? 0,
-                            neckCm: double.tryParse(neckCtrl.text) ?? 0,
-                            waistCm: double.tryParse(waistCtrl.text) ?? 0,
-                            hipCm: double.tryParse(hipCtrl.text) ?? 0,
-                          );
+                            // 1. Guardar BIOMETRÍA en estado
+                            c.setBiometrics(
+                              weight: double.tryParse(weightCtrl.text) ?? 0,
+                              height: double.tryParse(heightCtrl.text) ?? 0,
+                              neckCm: double.tryParse(neckCtrl.text) ?? 0,
+                              waistCm: double.tryParse(waistCtrl.text) ?? 0,
+                              hipCm: double.tryParse(hipCtrl.text) ?? 0,
+                            );
 
-                          // HÁBITOS
-                          c.setProfile(
-                            knowsFasting: fasting,
-                            alcoholFrequency: alcoholFreq,
-                          );
+                            // 2. Guardar hábitos
+                            c.setProfile(
+                              knowsFasting: fasting,
+                              alcoholFrequency: alcoholFreq,
+                            );
 
-                          // GUARDAR
-                          await c.saveToFirestore();
+                            // 3. Calcular plan completo AHORA MISMO
+                            final plan = c.calculateFullPlan();
 
-                          // NAVEGAR
-                          context.go("/onboarding/results");
-                        },
-                      ),
+                            // 4. Aplicar el plan al estado antes de guardar
+                            c.applyPlanToState(plan);
+
+                            // 5. Guardar todo (incluye plan) en Firestore
+                            await c.saveToFirestore();
+
+                            // 6. Ir a Results
+                            context.go("/onboarding/results");
+                          }),
                     ],
                   ),
                 ),
